@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="repair-mapper"> 
+	
+	
+	
+	<select id="pair_mileage" resultType="String">
+		select distinct case when car_mileage is null then 
+            (select min(car_mileage) from car_record 
+             where user_id=#{user_id} )
+       		 else 
+            (select max(car_mileage) from car_record where user_id=#{user_id} )
+			end  car_mileage
+			from car_record 
+		where user_id=#{user_id}
+	</select>
+	
+	<select id="repair_list" resultType="repair.RepairVO">
+		select * from repair
+	</select>
+</mapper>

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="car_record-mapper"> 
+
+	<delete id="record_delete">
+	delete from car_record where user_id = #{user_id} and record_id=#{record_id}
+	</delete>
+
+	<select id="myOilList" resultType="car_record.Car_recordVO">
+		select station, oil, oil_cost, car_mileage, record_date,record_id
+		from car_record
+		where user_id = #{user_id} and oil != 0
+		order by 4 desc
+	</select>
+
+	<select id="myRepairList" resultType="car_record.Car_recordVO">
+		select repair_cost, nvl(memo, '-') memo, car_mileage, record_date,
+    		nvl((select repair_name from repair where repair_id = a.repair_id), '-') repair_name,
+    		nvl((select repair_term from repair where repair_id = a.repair_id), 0) repair_term
+		,record_id
+		from car_record a
+		where user_id = #{user_id} and repair_cost != 0
+		order by 4 desc
+	</select>
+
+	<insert id="oil_insert">
+		insert into car_record(record_date, oil, oil_cost,car_mileage,user_id,station)
+		values(#{month}, #{oil}, #{oil_cost},#{car_mileage},#{user_id},#{memo})
+	</insert>
+	<insert id="inputInsert">
+		insert into car_record(repair_id, repair_cost, user_id, record_date, memo, car_mileage)
+		values(#{repair_id}, #{repair_cost}, #{user_id}, to_date(#{month}), #{memo}, #{car_mileage})
+	</insert>
+	
+	<select id="getId" resultType="Integer">
+		select repair_id from repair where repair_name = #{repair_name}
+	</select>
+
+<!-- 	<select id="oilCost" resultType="car_record.Car_recordVO"> -->
+	<select id="chartData" resultType="car_record.Car_recordVO">
+	select to_char(record_date, 'mm') month,
+		nvl(sum(oil_cost*oil), 0) month_oil_cost,
+		nvl(sum(repair_cost), 0) month_repair_cost,
+		nvl(sum(oil), 0) month_oil,
+        nvl(max(car_mileage), 0) max_mileage,
+        nvl(min(car_mileage), 0) min_mileage,
+		(max(car_mileage) - min(car_mileage)) month_mileage
+	from car_record
+	where user_id = #{user_id}
+		and to_char(record_date, 'yyyy') = to_char(sysdate, 'yyyy')
+    group by to_char(record_date, 'mm')
+    order by 1
+	</select>
+</mapper>

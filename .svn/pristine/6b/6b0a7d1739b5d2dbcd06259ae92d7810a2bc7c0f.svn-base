@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="car_info-mapper">
+
+	<update id="mycar_star">
+	update car_info set mycar_star = #{mycar_star} where user_id =#{user_id}
+	</update>
+
+	<select id="rank" resultType="String">
+		select rank from
+		(select rank() over(order by car_mileage) rank, r.* from
+		(select user_id, max(car_mileage) - min(car_mileage) car_mileage,
+		nvl(sum(oil), 0) oil
+		from car_record
+		where oil_cost is not null
+		group by user_id) r)
+		where user_id = #{user_id}
+	</select>
+
+	<select id="myCarEff" resultType="car_record.Car_recordVO">
+		select max(car_mileage) - min(car_mileage) car_mileage, nvl(sum(oil), 0) oil, round(avg(oil_cost)) oil_cost
+		from car_record
+		where oil_cost is not null and user_id = #{user_id}
+		order by car_mileage
+	</select>
+
+	<!-- <select id="myCarEff" resultType="car_record.Car_recordVO"> select 
+		(max(car_mileage) - min(car_mileage))/sum(oil) avg_mileage from car_record 
+		where oil_cost is not null and user_id = #{user_id} order by car_mileage 
+		</select> -->
+	<select id="efficiency" resultType="String">
+		select car_efficiency from car where car_name = #{car_name}
+	</select>
+	<insert id="info_insert">
+		insert into car_info(user_id,comp_id,car_name,car_nickname,car_image,car_mimage)
+		values(#{user_id},#{comp_id},#{car_name},#{car_nickname},#{car_image,
+		jdbcType=VARCHAR},#{car_mimage,
+		jdbcType=VARCHAR})
+	</insert>
+
+	<insert id="first_record">
+		insert into car_record(car_mileage, user_id)
+		values(#{car_mileage}, #{user_id})
+	</insert>
+
+</mapper>

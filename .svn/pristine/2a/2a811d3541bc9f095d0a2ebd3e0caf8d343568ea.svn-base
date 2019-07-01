@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="member-mapper">
+	<delete id="memberDelete">
+		delete from member where user_id=#{user_id}
+	</delete>
+	<update id="revokeAuthority">
+		update member set admin = 'N' where user_id =
+		#{user_id}
+	</update>
+	<update id="grantAuthority">
+		update member set admin = 'Y' where user_id =
+		#{user_id}
+	</update>
+
+	<select id="list" resultType="member.MemberVO">
+		select * from member order by admin
+		desc, user_id
+	</select>
+
+	<select id="loginMemeber" resultType="member.LoginMemberVO">
+		select fn_decrypt(user_pw)
+		user_pw, user_name, phone, admin,c.*,
+		(select distinct case when
+		car_mileage is null then
+		(select min(car_mileage) from car_record
+		where
+		user_id=#{user_id} )
+		else
+		(select max(car_mileage) from car_record where
+		user_id=#{user_id} )
+		end car_mileage
+		from car_record
+		where
+		user_id=#{user_id}) car_mileage
+		from member m,car_info c where
+		m.user_id=c.user_id and
+		m.user_id=#{user_id}
+	</select>
+
+	<select id="login" resultType="member.MemberVO">
+		select * from member where user_id
+		= #{user_id} and user_pw = fn_encrypt(#{user_pw})
+	</select>
+
+	<select id="id_check" resultType="member.MemberVO">
+		select * from member where
+		user_id = #{user_id}
+	</select>
+	<insert id="insert">
+		insert into member(user_id, user_pw, user_name,
+		phone)
+		values(#{user_id}, fn_encrypt(#{user_pw}), #{user_name},
+		#{phone})
+	</insert>
+	<update id="myinfo_update">
+		update member
+		set user_pw=fn_encrypt(#{user_pw}),
+		phone = #{phone}
+		where user_id = #{user_id}
+	</update>
+	<update id="myinfo_update2">
+		update car_info
+		set comp_id=#{comp_id}, car_name =
+		#{car_name},car_nickname=#{car_nickname}
+		<include refid="image"></include>
+		where user_id = #{user_id}
+	</update>
+	<sql id="image">
+		<if test="mycar_star=='image' or mycar_star=='image_delete'">
+		,car_image=#{car_image,jdbcType=VARCHAR},
+		car_mimage=#{car_mimage,jdbcType=VARCHAR}
+		</if>	
+	</sql>
+	
+	
+	<delete id="car_recorddelete">
+		delete from car_record where user_id = #{user_id}
+	</delete>
+	<insert id="car_recordinsert">
+		insert into car_record(user_id,car_mileage) values(#{user_id},#{car_mileage})
+	</insert>
+
+
+
+</mapper>
